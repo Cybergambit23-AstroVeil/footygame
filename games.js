@@ -1,7 +1,7 @@
-// =========================
-// Football Stars
-// Part 1
-// =========================
+// ==========================================
+// FOOTBALL STARS
+// Version 2
+// ==========================================
 
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
@@ -11,353 +11,522 @@ const HEIGHT = canvas.height;
 
 const CUT = 80;
 
-// ----------------------
-// Game Objects
-// ----------------------
+
+// -------------------------
+// GAME DATA
+// -------------------------
+
+let score = 0;
+
+
+// -------------------------
+// BALL
+// -------------------------
 
 const ball = {
-    x: WIDTH / 2,
-    y: HEIGHT / 2,
-    radius: 16,
-    vx: 0,
-    vy: 0
+
+    x: WIDTH/2,
+    y: HEIGHT/2,
+
+    radius:16,
+
+    vx:0,
+    vy:0
+
 };
 
+
+// -------------------------
+// PLAYER DISC
+// -------------------------
+
 const player = {
-    x: 250,
-    y: HEIGHT / 2,
-    radius: 30,
-    dragging: false,
-    startX: 0,
-    startY: 0
+
+    x:250,
+    y:HEIGHT/2,
+
+    homeX:250,
+    homeY:HEIGHT/2,
+
+    radius:32,
+
+    dragging:false,
+
+    startX:0,
+    startY:0
+
 };
+
+
+// -------------------------
+// PHYSICS
+// -------------------------
 
 const friction = 0.985;
 
-// England flag disc image
-const englandDisc = new Image();
-englandDisc.src = "england_disc.svg";
+const shotPower = 0.25;
 
-// ----------------------
-// Mouse
-// ----------------------
+const maxPull = 200;
 
-const mouse = {
-    x: 0,
-    y: 0,
-    down: false
+
+
+// -------------------------
+// MOUSE
+// -------------------------
+
+const mouse={
+
+    x:0,
+    y:0
+
 };
 
-canvas.addEventListener("mousemove", e => {
 
-    const rect = canvas.getBoundingClientRect();
+canvas.addEventListener("mousemove",(e)=>{
 
-    mouse.x = (e.clientX - rect.left) * (WIDTH / rect.width);
-    mouse.y = (e.clientY - rect.top) * (HEIGHT / rect.height);
 
-});
+    const rect=canvas.getBoundingClientRect();
 
-canvas.addEventListener("mousedown", () => {
 
-    const dx = mouse.x - player.x;
-    const dy = mouse.y - player.y;
+    mouse.x=(e.clientX-rect.left)
+    *(WIDTH/rect.width);
 
-    if (Math.sqrt(dx * dx + dy * dy) < player.radius) {
 
-        player.dragging = true;
+    mouse.y=(e.clientY-rect.top)
+    *(HEIGHT/rect.height);
 
-        player.startX = player.x;
-        player.startY = player.y;
+
+
+    if(player.dragging){
+
+
+        let dx=mouse.x-player.startX;
+        let dy=mouse.y-player.startY;
+
+
+        let distance=Math.sqrt(
+            dx*dx+dy*dy
+        );
+
+
+        if(distance>maxPull){
+
+            dx*=maxPull/distance;
+            dy*=maxPull/distance;
+
+        }
+
+
+        player.x=player.startX+dx;
+        player.y=player.startY+dy;
+
 
     }
 
-});
-
-canvas.addEventListener("mouseup", () => {
-
-    player.dragging = false;
 
 });
 
-// ----------------------
-// Pitch
-// ----------------------
 
-function drawPitch() {
 
-    ctx.fillStyle = "#2e8b57";
-    ctx.fillRect(0, 0, WIDTH, HEIGHT);
+canvas.addEventListener("mousedown",()=>{
 
-    ctx.strokeStyle = "white";
-    ctx.lineWidth = 6;
+
+    let dx=mouse.x-player.x;
+    let dy=mouse.y-player.y;
+
+
+    if(Math.sqrt(dx*dx+dy*dy)
+    <player.radius){
+
+
+        player.dragging=true;
+
+
+        player.startX=player.x;
+        player.startY=player.y;
+
+
+    }
+
+
+});
+
+
+
+canvas.addEventListener("mouseup",()=>{
+
+
+    if(!player.dragging)
+        return;
+
+
+
+    let dx=
+    player.startX-player.x;
+
+
+    let dy=
+    player.startY-player.y;
+
+
+
+    ball.vx=dx*shotPower;
+    ball.vy=dy*shotPower;
+
+
+
+    player.dragging=false;
+
+
+    player.x=player.homeX;
+    player.y=player.homeY;
+
+
+});
+
+
+
+// -------------------------
+// DRAW PITCH
+// -------------------------
+
+function drawPitch(){
+
+
+    ctx.fillStyle="#218c45";
+
+    ctx.fillRect(
+        0,
+        0,
+        WIDTH,
+        HEIGHT
+    );
+
+
+    ctx.strokeStyle="white";
+    ctx.lineWidth=5;
+
 
     ctx.beginPath();
 
-    ctx.moveTo(CUT, 0);
-    ctx.lineTo(WIDTH - CUT, 0);
-    ctx.lineTo(WIDTH, CUT);
-    ctx.lineTo(WIDTH, HEIGHT - CUT);
-    ctx.lineTo(WIDTH - CUT, HEIGHT);
-    ctx.lineTo(CUT, HEIGHT);
-    ctx.lineTo(0, HEIGHT - CUT);
-    ctx.lineTo(0, CUT);
+
+    ctx.moveTo(CUT,0);
+    ctx.lineTo(WIDTH-CUT,0);
+
+    ctx.lineTo(WIDTH,CUT);
+
+    ctx.lineTo(WIDTH,HEIGHT-CUT);
+
+    ctx.lineTo(WIDTH-CUT,HEIGHT);
+
+    ctx.lineTo(CUT,HEIGHT);
+
+    ctx.lineTo(0,HEIGHT-CUT);
+
+    ctx.lineTo(0,CUT);
+
 
     ctx.closePath();
+
     ctx.stroke();
+
+
 
     // halfway line
 
     ctx.beginPath();
 
-    ctx.moveTo(WIDTH / 2, 0);
-    ctx.lineTo(WIDTH / 2, HEIGHT);
+    ctx.moveTo(WIDTH/2,0);
+    ctx.lineTo(WIDTH/2,HEIGHT);
 
     ctx.stroke();
+
+
 
     // centre circle
 
     ctx.beginPath();
 
-    ctx.arc(WIDTH / 2, HEIGHT / 2, 90, 0, Math.PI * 2);
+    ctx.arc(
+        WIDTH/2,
+        HEIGHT/2,
+        90,
+        0,
+        Math.PI*2
+    );
 
     ctx.stroke();
 
+
+
 }
 
-// ----------------------
-// Ball
-// ----------------------
 
-function drawBall() {
+
+// -------------------------
+// GOALS
+// -------------------------
+
+function drawGoals(){
+
+
+    ctx.fillStyle="white";
+
+
+    ctx.fillRect(
+        0,
+        HEIGHT/2-90,
+        35,
+        180
+    );
+
+
+    ctx.fillRect(
+        WIDTH-35,
+        HEIGHT/2-90,
+        35,
+        180
+    );
+
+
+}
+
+
+
+// -------------------------
+// DRAW BALL
+// -------------------------
+
+function drawBall(){
+
 
     ctx.beginPath();
 
-    ctx.fillStyle = "white";
 
-    ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+    ctx.fillStyle="white";
+
+
+    ctx.arc(
+        ball.x,
+        ball.y,
+        ball.radius,
+        0,
+        Math.PI*2
+    );
+
 
     ctx.fill();
 
-    ctx.strokeStyle = "black";
+
+    ctx.strokeStyle="black";
 
     ctx.stroke();
 
-}
-
-// ----------------------
-// Player
-// ----------------------
-
-function drawPlayer() {
-
-    if (englandDisc.complete) {
-
-        ctx.drawImage(
-            englandDisc,
-            player.x - player.radius,
-            player.y - player.radius,
-            player.radius * 2,
-            player.radius * 2
-        );
-
-    } else {
-
-        ctx.beginPath();
-
-        ctx.fillStyle = "red";
-
-        ctx.arc(
-            player.x,
-            player.y,
-            player.radius,
-            0,
-            Math.PI * 2
-        );
-
-        ctx.fill();
-
-    }
 
 }
 
-// ----------------------
-// Physics
-// ----------------------
 
-function updateBall() {
 
-    ball.x += ball.vx;
-    ball.y += ball.vy;
+// -------------------------
+// DRAW PLAYER
+// -------------------------
 
-    ball.vx *= friction;
-    ball.vy *= friction;
+function drawPlayer(){
 
-    if (Math.abs(ball.vx) < 0.05)
-        ball.vx = 0;
 
-    if (Math.abs(ball.vy) < 0.05)
-        ball.vy = 0;
+    ctx.beginPath();
+
+
+    ctx.fillStyle="white";
+
+
+    ctx.arc(
+        player.x,
+        player.y,
+        player.radius,
+        0,
+        Math.PI*2
+    );
+
+
+    ctx.fill();
+
+
+
+    ctx.strokeStyle="red";
+
+    ctx.lineWidth=5;
+
+    ctx.stroke();
+
+
 
 }
 
-// ----------------------
-// Main Loop
-// ----------------------
 
-function animate() {
 
-    requestAnimationFrame(animate);
+// -------------------------
+// AIM LINE
+// -------------------------
 
-    drawPitch();
+function drawAim(){
 
-    updateBall();
-
-    drawBall();
-
-    drawPlayer();
-
-}
-
-animate();
-// ==========================================
-// PART 2
-// Drag & Shoot Controls
-// ==========================================
-
-const MAX_PULL = 180;
-const POWER = 0.22;
-
-canvas.addEventListener("mousemove", (e)=>{
-
-    const rect = canvas.getBoundingClientRect();
-
-    mouse.x = (e.clientX-rect.left)*(WIDTH/rect.width);
-    mouse.y = (e.clientY-rect.top)*(HEIGHT/rect.height);
-
-    if(player.dragging){
-
-        let dx = mouse.x-player.startX;
-        let dy = mouse.y-player.startY;
-
-        let dist = Math.sqrt(dx*dx+dy*dy);
-
-        if(dist>MAX_PULL){
-
-            dx*=MAX_PULL/dist;
-            dy*=MAX_PULL/dist;
-
-        }
-
-        player.x=player.startX+dx;
-        player.y=player.startY+dy;
-
-    }
-
-});
-
-canvas.addEventListener("mouseup", ()=>{
-
-    if(!player.dragging) return;
-
-    player.dragging=false;
-
-    let dx=player.startX-player.x;
-    let dy=player.startY-player.y;
-
-    let power=Math.sqrt(dx*dx+dy*dy);
-
-    ball.vx=dx*POWER;
-    ball.vy=dy*POWER;
-
-    player.x=player.startX;
-    player.y=player.startY;
-
-});
-
-// ==========================================
-// Draw aiming line
-// ==========================================
-
-function drawAimLine(){
 
     if(!player.dragging)
         return;
 
+
     ctx.beginPath();
+
 
     ctx.strokeStyle="yellow";
 
     ctx.lineWidth=4;
 
-    ctx.moveTo(player.startX,player.startY);
 
-    ctx.lineTo(player.x,player.y);
+    ctx.moveTo(
+        player.homeX,
+        player.homeY
+    );
+
+
+    ctx.lineTo(
+        player.x,
+        player.y
+    );
+
 
     ctx.stroke();
 
+
+
 }
 
-// ==========================================
-// Power Meter
-// ==========================================
 
-function drawPower(){
 
-    if(!player.dragging)
-        return;
+// -------------------------
+// COLLISION
+// -------------------------
 
-    let dx=player.startX-player.x;
-    let dy=player.startY-player.y;
+function hitBall(){
 
-    let p=Math.sqrt(dx*dx+dy*dy)/MAX_PULL;
 
-    ctx.fillStyle="rgba(0,0,0,.5)";
-    ctx.fillRect(20,HEIGHT-45,250,22);
+    let dx=ball.x-player.x;
+    let dy=ball.y-player.y;
 
-    ctx.fillStyle="lime";
 
-    if(p>0.33)
-        ctx.fillStyle="yellow";
-
-    if(p>0.66)
-        ctx.fillStyle="red";
-
-    ctx.fillRect(
-        20,
-        HEIGHT-45,
-        250*p,
-        22
+    let distance=Math.sqrt(
+        dx*dx+dy*dy
     );
 
-}
 
-// ==========================================
-// Player hits ball
-// ==========================================
+    if(
+        distance<
+        ball.radius+player.radius
+    ){
 
-function playerBallCollision(){
 
-    const dx=ball.x-player.x;
-    const dy=ball.y-player.y;
+        let angle=Math.atan2(
+            dy,
+            dx
+        );
 
-    const dist=Math.sqrt(dx*dx+dy*dy);
 
-    if(dist<ball.radius+player.radius){
+        ball.vx+=Math.cos(angle)*8;
+        ball.vy+=Math.sin(angle)*8;
 
-        const nx=dx/dist;
-        const ny=dy/dist;
-
-        const overlap=
-            ball.radius+
-            player.radius-
-            dist;
-
-        ball.x+=nx*overlap;
-        ball.y+=ny*overlap;
-
-        ball.vx+=nx*8;
-        ball.vy+=ny*8;
 
     }
 
+
 }
+
+
+
+// -------------------------
+// BALL UPDATE
+// -------------------------
+
+function updateBall(){
+
+
+    ball.x+=ball.vx;
+    ball.y+=ball.vy;
+
+
+
+    ball.vx*=friction;
+    ball.vy*=friction;
+
+
+
+    if(ball.x-ball.radius<0){
+
+        ball.x=ball.radius;
+        ball.vx*=-0.9;
+
+    }
+
+
+    if(ball.x+ball.radius>WIDTH){
+
+        ball.x=WIDTH-ball.radius;
+        ball.vx*=-0.9;
+
+    }
+
+
+    if(ball.y-ball.radius<0){
+
+        ball.y=ball.radius;
+        ball.vy*=-0.9;
+
+    }
+
+
+    if(ball.y+ball.radius>HEIGHT){
+
+        ball.y=HEIGHT-ball.radius;
+        ball.vy*=-0.9;
+
+    }
+
+
+
+}
+
+
+
+// -------------------------
+// LOOP
+// -------------------------
+
+function gameLoop(){
+
+
+    requestAnimationFrame(gameLoop);
+
+
+
+    drawPitch();
+
+    drawGoals();
+
+
+    hitBall();
+
+    updateBall();
+
+
+    drawBall();
+
+    drawPlayer();
+
+    drawAim();
+
+
+
+}
+
+
+gameLoop();
