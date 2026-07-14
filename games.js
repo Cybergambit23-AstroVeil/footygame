@@ -219,3 +219,145 @@ function animate() {
 }
 
 animate();
+// ==========================================
+// PART 2
+// Drag & Shoot Controls
+// ==========================================
+
+const MAX_PULL = 180;
+const POWER = 0.22;
+
+canvas.addEventListener("mousemove", (e)=>{
+
+    const rect = canvas.getBoundingClientRect();
+
+    mouse.x = (e.clientX-rect.left)*(WIDTH/rect.width);
+    mouse.y = (e.clientY-rect.top)*(HEIGHT/rect.height);
+
+    if(player.dragging){
+
+        let dx = mouse.x-player.startX;
+        let dy = mouse.y-player.startY;
+
+        let dist = Math.sqrt(dx*dx+dy*dy);
+
+        if(dist>MAX_PULL){
+
+            dx*=MAX_PULL/dist;
+            dy*=MAX_PULL/dist;
+
+        }
+
+        player.x=player.startX+dx;
+        player.y=player.startY+dy;
+
+    }
+
+});
+
+canvas.addEventListener("mouseup", ()=>{
+
+    if(!player.dragging) return;
+
+    player.dragging=false;
+
+    let dx=player.startX-player.x;
+    let dy=player.startY-player.y;
+
+    let power=Math.sqrt(dx*dx+dy*dy);
+
+    ball.vx=dx*POWER;
+    ball.vy=dy*POWER;
+
+    player.x=player.startX;
+    player.y=player.startY;
+
+});
+
+// ==========================================
+// Draw aiming line
+// ==========================================
+
+function drawAimLine(){
+
+    if(!player.dragging)
+        return;
+
+    ctx.beginPath();
+
+    ctx.strokeStyle="yellow";
+
+    ctx.lineWidth=4;
+
+    ctx.moveTo(player.startX,player.startY);
+
+    ctx.lineTo(player.x,player.y);
+
+    ctx.stroke();
+
+}
+
+// ==========================================
+// Power Meter
+// ==========================================
+
+function drawPower(){
+
+    if(!player.dragging)
+        return;
+
+    let dx=player.startX-player.x;
+    let dy=player.startY-player.y;
+
+    let p=Math.sqrt(dx*dx+dy*dy)/MAX_PULL;
+
+    ctx.fillStyle="rgba(0,0,0,.5)";
+    ctx.fillRect(20,HEIGHT-45,250,22);
+
+    ctx.fillStyle="lime";
+
+    if(p>0.33)
+        ctx.fillStyle="yellow";
+
+    if(p>0.66)
+        ctx.fillStyle="red";
+
+    ctx.fillRect(
+        20,
+        HEIGHT-45,
+        250*p,
+        22
+    );
+
+}
+
+// ==========================================
+// Player hits ball
+// ==========================================
+
+function playerBallCollision(){
+
+    const dx=ball.x-player.x;
+    const dy=ball.y-player.y;
+
+    const dist=Math.sqrt(dx*dx+dy*dy);
+
+    if(dist<ball.radius+player.radius){
+
+        const nx=dx/dist;
+        const ny=dy/dist;
+
+        const overlap=
+            ball.radius+
+            player.radius-
+            dist;
+
+        ball.x+=nx*overlap;
+        ball.y+=ny*overlap;
+
+        ball.vx+=nx*8;
+        ball.vy+=ny*8;
+
+    }
+
+}
